@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 로그인 - Faker Fan Page</title>
+    <link rel="stylesheet" href="../styles/login_styles.css">
+</head>
+<body>
+    <div class="login-container fade-in">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">아이디</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="slide-in">로그인</button>
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('errorMessage');
+            
+            console.log('로그인 시도:', { username });
+            
+            try {
+                console.log('API 요청 시작...');
+                const response = await fetch('../api/auth/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                console.log('서버 응답 상태:', response.status);
+                console.log('응답 헤더:', Object.fromEntries(response.headers.entries()));
+
+                // 응답 텍스트 먼저 확인
+                const responseText = await response.text();
+                console.log('서버 응답 원본:', responseText);
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                    console.log('파싱된 응답 데이터:', data);
+                } catch (parseError) {
+                    console.error('JSON 파싱 에러:', parseError);
+                    throw new Error('서버 응답을 처리할 수 없습니다: ' + responseText);
+                }
+                
+                if (data.success) {
+                    console.log('로그인 성공, 리다이렉트 시작...');
+                    window.location.href = 'index.html';
+                } else {
+                    console.error('로그인 실패:', data.message);
+                    errorMessage.textContent = data.message || '로그인에 실패했습니다.';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('로그인 에러 상세:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                errorMessage.textContent = '서버 오류가 발생했습니다: ' + error.message;
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // 애니메이션 적용
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in, .slide-in').forEach(el => {
+                    el.classList.add('visible');
+                });
+            }, 100);
+        });
+    </script>
+</body>
+</html>

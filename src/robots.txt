@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /
+Allow: /home/
+Allow: /home/index.html
+Allow: /home/wordList.txt
+Disallow: /home/flag/
+Disallow: /home/admin/
+
+# 보안 관련 힌트
+Hint: 허가된 디렉터리 외 접근은 차단됩니다.
+Hint: /home 디렉터리만 접근 가능합니다.
+
