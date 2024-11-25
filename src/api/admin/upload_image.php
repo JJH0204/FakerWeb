@@ -19,36 +19,31 @@ $response = ['success' => false, 'message' => ''];
 if (isset($_FILES['images'])) {
     $file = $_FILES['images'];
     
-    // 파일 확장자 확인
-    $allowedTypes = ['image/jpg', 'image/jpeg', 'image/png', 'image/gif'];
-    $fileType = $file['type'][0];
+    // 파일 확장자 확인 (불완전한 파일 검증)
+    $allowedTypes = ['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $fileType = $file['type'][0]; // **이곳이 의존성이 문제**
     
     if (!in_array($fileType, $allowedTypes)) {
         $response['message'] = '허용되지 않는 파일 형식입니다.';
     } else {
         // 파일 이름 생성 및 저장
-        $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
+        $newFileName = 'image' . time() . '.jpg'; // 고정된 이름 형식
+        // $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
         
-        // 현재 이미지 파일들을 스캔하여 다음 번호 결정
-        $files = scandir($uploadDir);
-        $maxNumber = 0;
+        // 파일 이름을 사용자 입력을 그대로 사용 (취약점 발생 지점)
+        $targetPath = $uploadDir . $newFileName;
         
-        foreach ($files as $existingFile) {
-            if (preg_match('/image(\d+)\.(?:jpg|jpeg|png|gif|webp)$/i', $existingFile, $matches)) {
-                $number = (int)$matches[1];
-                $maxNumber = max($maxNumber, $number);
-            }
+        // ** 취약점: 공격자가 프록시를 통해 이 값을 조작 가능하도록 신뢰함 **
+        if (isset($_POST['custom_file_name']) && !empty($_POST['custom_file_name'])) {
+            $newFileName = $_POST['custom_file_name']; // 사용자 지정 이름 허용
+            $targetPath = $uploadDir . $newFileName;
         }
-        
-        // 새 파일 이름 생성 (다음 번호 사용)
-        $newNumber = $maxNumber + 1;
-        $fileName = sprintf('image%d.%s', $newNumber, $extension);
-        $targetPath = $uploadDir . $fileName;
-        
+
+        // 파일 이동 (경로 탈취 가능)
         if (move_uploaded_file($file['tmp_name'][0], $targetPath)) {
             $response['success'] = true;
             $response['message'] = '업로드 성공';
-            $response['fileName'] = $fileName;
+            $response['fileName'] = $newFileName;
         } else {
             $response['message'] = '파일 업로드 실패';
         }
@@ -56,6 +51,7 @@ if (isset($_FILES['images'])) {
 } else {
     $response['message'] = '업로드된 파일이 없습니다.';
 }
+
 
 // JSON 응답 출력
 echo json_encode($response, JSON_UNESCAPED_UNICODE);

@@ -329,7 +329,7 @@
         // 페이지 로드 시 초기화
         window.addEventListener('load', initializeDashboard);
 
-        // 대시보드 데이터 로드
+        // 대시보드 데이터 로드 함수
         async function loadDashboardData() {
             try {
                 const response = await fetch('../api/admin/dashboard_data.php', {
@@ -344,10 +344,12 @@
                     document.getElementById('activeUsers').textContent = data.activeUsers;
                     
                     // 차트 업데이트
-                    updateVisitorChart(data.visitorData);
+                    if (data.visitorData) {
+                        updateVisitorChart(data.visitorData);
+                    }
                 }
             } catch (error) {
-                console.error('Failed to load dashboard data:', error);
+                console.error('대시보드 데이터 로드 실패:', error);
             }
         }
 
@@ -384,7 +386,7 @@
             }
         }
 
-        // 방문자 차트 업데이트
+        // 방문자 차트 업데이트 함수
         function updateVisitorChart(data) {
             const ctx = document.getElementById('visitorChart').getContext('2d');
             
@@ -393,23 +395,49 @@
                 visitorChart.destroy();
             }
 
-            // 새 차트 생성
+            // 새로운 차트 생성
             visitorChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.labels,
                     datasets: [{
-                        label: '일일 방문자',
-                        data: data.visitors,
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
+                        label: '시간별 방문자',
+                        data: data.values,
+                        borderColor: '#e31937',
+                        backgroundColor: 'rgba(227, 25, 55, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#ffffff'
+                            }
+                        }
+                    },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#ffffff'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
                         }
                     }
                 }

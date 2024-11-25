@@ -16,7 +16,10 @@ services:
     image: mariadb:10.5
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: r00tp4$$₩oRd
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: fakerDB
+      MYSQL_USER: faker
+      MYSQL_PASSWORD: F4k3r_1s_H4rd_T0_Gu3ss
     volumes:
       - db_data:/var/lib/mysql
       - ./fakerDB.sql:/docker-entrypoint-initdb.d/fakerDB.sql

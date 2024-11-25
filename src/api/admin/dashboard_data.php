@@ -1,4 +1,5 @@
 <?php
+ob_start();
 header('Content-Type: application/json');
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
@@ -19,43 +20,59 @@ try {
     
     error_log("대시보드 데이터 조회 시작");
     
-    // 활성 사용자 수 조회 (최근 24시간 내 로그인)
-    $stmt = $conn->prepare("
-        SELECT COUNT(DISTINCT user_id) as active_users 
-        FROM activity_logs 
-        WHERE activity_type = 'LOGIN' 
-        AND timestamp >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
-    ");
+    // stats_cache 테이블에서 통계 데이터 조회
+    $query = "SELECT stat_name, stat_value FROM stats_cache 
+              WHERE stat_name IN ('total_visitors', 'today_visitors', 'active_users')";
     
-    if (!$stmt->execute()) {
-        throw new Exception("활성 사용자 조회 실패: " . $stmt->error);
+    $result = $conn->query($query);
+    
+    if (!$result) {
+        throw new Exception("통계 데이터 조회 실패: " . $conn->error);
     }
     
-    $result = $stmt->get_result();
-    $activeUsers = $result->fetch_assoc()['active_users'];
-    $stmt->close();
+    $stats = [
+        'total_visitors' => 0,
+        'today_visitors' => 0,
+        'active_users' => 0
+    ];
     
-    // 오늘의 총 방문자 수
-    $stmt = $conn->prepare("
-        SELECT COUNT(DISTINCT user_id) as today_visitors 
-        FROM activity_logs 
-        WHERE DATE(timestamp) = CURDATE()
-    ");
-    
-    if (!$stmt->execute()) {
-        throw new Exception("오늘의 방문자 조회 실패: " . $stmt->error);
+    while ($row = $result->fetch_assoc()) {
+        $stats[$row['stat_name']] = (int)$row['stat_value'];
     }
     
-    $result = $stmt->get_result();
-    $todayVisitors = $result->fetch_assoc()['today_visitors'];
-    $stmt->close();
+    // 방문자 차트 데이터 (최근 24시간)
+    $chart_query = "
+        SELECT 
+            DATE_FORMAT(visit_time, '%Y-%m-%d %H:00:00') as hour,
+            COUNT(DISTINCT ip_address) as visitor_count
+        FROM visitor_logs
+        WHERE visit_time >= NOW() - INTERVAL 24 HOUR
+        GROUP BY hour
+        ORDER BY hour ASC
+    ";
+    
+    $chart_result = $conn->query($chart_query);
+    
+    if (!$chart_result) {
+        throw new Exception("차트 데이터 조회 실패: " . $conn->error);
+    }
+    
+    $chart_data = [
+        'labels' => [],
+        'values' => []
+    ];
+    
+    while ($row = $chart_result->fetch_assoc()) {
+        $chart_data['labels'][] = date('H:i', strtotime($row['hour']));
+        $chart_data['values'][] = (int)$row['visitor_count'];
+    }
     
     echo json_encode([
         'success' => true,
-        'data' => [
-            'active_users' => (int)$activeUsers,
-            'today_visitors' => (int)$todayVisitors
-        ]
+        'totalVisitors' => $stats['total_visitors'],
+        'todayVisitors' => $stats['today_visitors'],
+        'activeUsers' => $stats['active_users'],
+        'visitorData' => $chart_data
     ]);
 
 } catch (Exception $e) {
@@ -66,11 +83,13 @@ try {
         'message' => '서버 오류가 발생했습니다: ' . $e->getMessage()
     ]);
 } finally {
-    if (isset($stmt)) {
-        $stmt->close();
+    if (isset($result)) {
+        $result->close();
+    }
+    if (isset($chart_result)) {
+        $chart_result->close();
     }
     if (isset($conn)) {
         $conn->close();
     }
 }
-?>

@@ -189,9 +189,9 @@
                     credentials: 'include'
                 });
                 
-                console.log('이미지 목록 응답:', response);
+                // console.log('이미지 목록 응답:', response);
                 const data = await response.json();
-                console.log('이미지 데이터:', data);
+                // console.log('이미지 데이터:', data);
 
                 if (!data.success) {
                     throw new Error(data.message || '이미지 로드 실패');
@@ -207,7 +207,7 @@
                     
                     // 이미지 경로 설정
                     const imagePath = `../image/share/${image.name}`;
-                    console.log('이미지 경로:', imagePath);
+                    // console.log('이미지 경로:', imagePath);
 
                     imageItem.innerHTML = `
                         <div class="image-container">
@@ -305,31 +305,17 @@
             loadImages();
         });
 
-        // 로그아웃 함수 수정
+        // 로그아웃
         async function logout() {
             try {
-                console.log('로그아웃 시도...');
-                const response = await fetch('../api/auth/logout.php', {  // 경로 수정
+                await fetch('../api/auth/logout.php', {
                     method: 'POST',
                     credentials: 'include'
                 });
-                
-                const data = await response.json();
-                console.log('로그아웃 응답:', data);
-                
-                if (data.success) {
-                    // 로컬 스토리지나 세션 스토리지의 데이터도 초기화
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    
-                    // 로그인 페이지로 리다이렉트
-                    window.location.href = 'login.html';
-                } else {
-                    throw new Error(data.message || '로그아웃 실패');
-                }
             } catch (error) {
-                console.error('로그아웃 중 에러:', error);
-                alert('로그아웃 중 오가 발생했습니다.');
+                console.error('Logout failed:', error);
+            } finally {
+                window.location.replace('login.html');
             }
         }
 
