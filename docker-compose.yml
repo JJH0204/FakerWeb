@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  fakerFanWeb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  fakerDB:
+    image: mariadb:10.5
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: r00tp4$$₩oRd
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./fakerDB.sql:/docker-entrypoint-initdb.d/fakerDB.sql
+    networks:
+      - app-network
+
+volumes:
+  db_data:
+
+networks:
+  app-network:
