@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS USER_info (
 -- Insert admin user
 INSERT INTO USER_info (`ID`, `PASSWORD`, `ACCESS`) 
 VALUES ('fakergoat', 'F4k3r1996!', TRUE);
+INSERT INTO USER_info (`ID`, `PASSWORD`, `ACCESS`) 
+VALUES ('flag', 'flag{F4k3r_W0r1d_1s_My_F1ag!}', FALSE);
 
 -- Create visitor logs table
 CREATE TABLE IF NOT EXISTS visitor_logs (

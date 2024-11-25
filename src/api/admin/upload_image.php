@@ -27,7 +27,22 @@ if (isset($_FILES['images'])) {
         $response['message'] = '허용되지 않는 파일 형식입니다.';
     } else {
         // 파일 이름 생성 및 저장
-        $fileName = $file['name'][0];
+        $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
+        
+        // 현재 이미지 파일들을 스캔하여 다음 번호 결정
+        $files = scandir($uploadDir);
+        $maxNumber = 0;
+        
+        foreach ($files as $existingFile) {
+            if (preg_match('/image(\d+)\.(?:jpg|jpeg|png|gif|webp)$/i', $existingFile, $matches)) {
+                $number = (int)$matches[1];
+                $maxNumber = max($maxNumber, $number);
+            }
+        }
+        
+        // 새 파일 이름 생성 (다음 번호 사용)
+        $newNumber = $maxNumber + 1;
+        $fileName = sprintf('image%d.%s', $newNumber, $extension);
         $targetPath = $uploadDir . $fileName;
         
         if (move_uploaded_file($file['tmp_name'][0], $targetPath)) {
