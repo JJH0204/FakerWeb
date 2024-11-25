@@ -1,7 +1,5 @@
-version: '3.8'
-
 services:
-  fakerFanWeb:
+  fakerweb:
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,11 +8,11 @@ services:
     volumes:
       - ./src:/var/www/html
     depends_on:
-      - db
+      - fakerdb
     networks:
       - app-network
 
-  fakerDB:
+  fakerdb:
     image: mariadb:10.5
     restart: always
     environment:
