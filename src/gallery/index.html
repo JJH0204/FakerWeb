@@ -215,7 +215,7 @@
                         <img src="../image/share/${image.name}" 
                              alt="Faker Image" 
                              loading="lazy"
-                             onerror="this.onerror=null; this.src='../assets/images/error.png';">
+                             onerror="this.onerror=null; this.src='../assets/images/error.png'; this.setAttribute('data-error', '${image.name}')">
                     `;
 
                     galleryGrid.appendChild(galleryItem);

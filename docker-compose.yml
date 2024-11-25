@@ -26,6 +26,21 @@ services:
     networks:
       - app-network
 
+  waf-nginx:
+    image: owasp/modsecurity-crs:nginx
+    ports:
+      - "8081:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./modsecurity.conf:/etc/modsecurity/modsecurity.conf:ro
+      - ./crs:/etc/nginx/modsec-crs:ro
+    depends_on:
+      - fakerweb
+    environment:
+      - MODSECURITY_ENABLE=true
+    networks:
+      - app-network  
+
 volumes:
   db_data:
 
