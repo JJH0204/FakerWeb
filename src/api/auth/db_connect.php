@@ -1,5 +1,5 @@
 <?php
-$host = 'localhost';
+$host = 'fakerDB';
 $dbname = 'fakerDB';
 $username = 'faker';
 $password = 'F4k3r_1s_H4rd_T0_Gu3ss';

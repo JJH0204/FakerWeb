@@ -124,6 +124,6 @@ ON SCHEDULE EVERY 1 MINUTE
 DO CALL update_visitor_stats();
 
 -- Create database user and grant privileges
-CREATE USER IF NOT EXISTS 'faker'@'localhost' IDENTIFIED BY 'F4k3r_1s_H4rd_T0_Gu3ss';
-GRANT ALL PRIVILEGES ON fakerDB.* TO 'faker'@'localhost';
+CREATE USER IF NOT EXISTS 'faker'@'%' IDENTIFIED BY 'F4k3r_1s_H4rd_T0_Gu3ss';
+GRANT ALL PRIVILEGES ON fakerDB.* TO 'faker'@'%';
 FLUSH PRIVILEGES;
