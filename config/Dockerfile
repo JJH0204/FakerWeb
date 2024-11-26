@@ -17,6 +17,7 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
             zip \
             unzip \
             gosu \
+            dos2unix \
             mariadb-client || default-mysql-client; \
         elif [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ]; then \
             dnf update -y && dnf install -y \
@@ -27,6 +28,7 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
             unzip \
             mariadb \
             httpd \
+            dos2unix \
             mod_ssl && \
             dnf clean all && \
             curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.14/gosu-amd64" && \
@@ -41,6 +43,7 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
         zip \
         unzip \
         gosu \
+        dos2unix \
         mariadb-client || default-mysql-client; \
     fi
 
@@ -78,11 +81,12 @@ RUN if [ "$OS_TYPE" = "linux" ] && ( [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_D
 WORKDIR /var/www/html
 
 # Copy entrypoint script
-COPY config/docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY config/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    dos2unix /usr/local/bin/docker-entrypoint.sh
 
 # Expose port
 EXPOSE 80
 
 # Set entrypoint
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
