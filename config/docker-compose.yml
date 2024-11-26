@@ -3,10 +3,20 @@ services:
     build:
       context: ..
       dockerfile: config/Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+        LINUX_DIST: ${LINUX_DIST:-ubuntu}
     ports:
       - "8080:80"
     volumes:
       - ../src:/var/www/html
+      - ../src/image/share:/var/www/html/image/share
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    user: "www-data:www-data"
+    privileged: true
     depends_on:
       - fakerdb
     networks:
@@ -39,10 +49,11 @@ services:
     environment:
       - MODSECURITY_ENABLE=true
     networks:
-      - app-network  
+      - app-network
 
 volumes:
   db_data:
 
 networks:
   app-network:
+    driver: bridge

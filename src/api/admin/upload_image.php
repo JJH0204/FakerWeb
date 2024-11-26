@@ -21,34 +21,44 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', $projectRoot . '/logs/upload_errors.log');
 
-// 업로드 디렉토리 권한 확인
-if (!is_dir($uploadDir)) {
-    if (!mkdir($uploadDir, 0777, true)) {
-        error_log("Failed to create directory: " . $uploadDir . ". Error: " . error_get_last()['message']);
+// 업로드 디렉토리 확인 및 생성
+if (!file_exists($uploadDir)) {
+    error_log("Creating upload directory: " . $uploadDir);
+    if (!@mkdir($uploadDir, 0775, true)) {
+        $error = error_get_last();
+        error_log("Failed to create directory: " . $error['message']);
         $response = [
             'success' => false,
-            'message' => '업로드 디렉토리를 생성할 수 없습니다. 서버 관리자에게 문의하세요.',
-            'error' => error_get_last()['message']
+            'message' => '업로드 디렉토리 생성 실패',
+            'error' => $error['message']
         ];
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
-    // 생성된 디렉토리의 권한 변경
-    chmod($uploadDir, 0777);
 }
 
-// 기존 디렉토리의 권한 확인 및 수정
+// 디렉토리 권한 확인
 if (!is_writable($uploadDir)) {
-    chmod($uploadDir, 0777);
-    if (!is_writable($uploadDir)) {
-        error_log("Directory not writable: " . $uploadDir);
-        $response = [
-            'success' => false,
-            'message' => '업로드 디렉토리에 쓰기 권한이 없습니다. 서버 관리자에게 문의하세요.'
-        ];
-        echo json_encode($response, JSON_UNESCAPED_UNICODE);
-        exit();
-    }
+    $currentPerms = substr(sprintf('%o', fileperms($uploadDir)), -4);
+    $currentUser = posix_getpwuid(fileowner($uploadDir));
+    $currentGroup = posix_getgrgid(filegroup($uploadDir));
+    
+    error_log(sprintf(
+        "Directory permissions check failed:\nPath: %s\nPerms: %s\nOwner: %s\nGroup: %s\nCurrent User: %s\nCurrent Group: %s",
+        $uploadDir,
+        $currentPerms,
+        $currentUser['name'],
+        $currentGroup['name'],
+        get_current_user(),
+        getmygid()
+    ));
+
+    $response = [
+        'success' => false,
+        'message' => '업로드 디렉토리에 쓰기 권한이 없습니다. 서버 관리자에게 문의하세요.'
+    ];
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    exit();
 }
 
 // 응답 초기화
