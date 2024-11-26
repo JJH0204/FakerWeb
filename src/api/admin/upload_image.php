@@ -68,48 +68,48 @@ $response = ['success' => false, 'message' => ''];
 if (isset($_FILES['images'])) {
     $file = $_FILES['images'];
 
-    // 허용된 MIME 타입 정의
-    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-
     if (!isset($file['tmp_name'][0]) || empty($file['tmp_name'][0])) {
         $response['message'] = '업로드된 파일이 없습니다.';
     } else {
-        // MIME 타입 검증 우회
-        $detectedType = $_FILES['type'][0]; // 클라이언트 전송 MIME 타입 사용
-
-        if (!in_array($detectedType, $allowedTypes)) {
-            $response['message'] = '허용되지 않는 파일 형식입니다.';
+        $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
+        if (!in_array($extension, $allowedExtensions)) {
+            $response['message'] = '허용되지 않는 파일 확장자입니다.';
         } else {
-            // 파일 확장자 가져오기
-            $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
+            $newFileName = isset($_POST['filename']) ? $_POST['filename'] : $file['name'][0];
+            
+            // 다중 URL 인코딩 방지를 위한 반복 디코딩
+            $prevFileName = '';
+            while ($prevFileName !== $newFileName) {
+                $prevFileName = $newFileName;
+                $newFileName = urldecode($newFileName);
+            }
+            
+            // 기본적인 경로 탐색 방지
+            $newFileName = basename($newFileName);
+            
+            // 경로 문자열 제거
+            $newFileName = str_replace(['../', './'], '', $newFileName);
+            
+            $targetPath = $uploadDir . $newFileName;
 
-            // 확장자 검증 약화 (이중 확장자 허용)
-            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'php'];
-            if (!in_array($extension, $allowedExtensions)) {
-                $response['message'] = '허용되지 않는 파일 확장자입니다.';
+            if (move_uploaded_file($file['tmp_name'][0], $targetPath)) {
+                chmod($targetPath, 0777);
+                
+                $response = [
+                    'success' => true,
+                    'message' => '파일이 성공적으로 업로드되었습니다.',
+                    'filename' => $newFileName,
+                    'path' => str_replace($projectRoot, '', $targetPath)
+                ];
             } else {
-                // 사용자 정의 파일 이름 허용
-                $newFileName = 'image' . time() . '.' . $extension;
-                if (isset($_POST['custom_file_name']) && !empty($_POST['custom_file_name'])) {
-                    $newFileName = $_POST['custom_file_name']; // 검증 없이 사용자 입력 사용
-                }
-
-                // 경로 탈출 가능
-                $targetPath = $uploadDir . $newFileName;
-
-                // 파일 이동
-                if (move_uploaded_file($file['tmp_name'][0], $targetPath)) {
-                    $response['success'] = true;
-                    $response['message'] = '업로드 성공';
-                    $response['fileName'] = $newFileName;
-                } else {
-                    $response['message'] = '파일 업로드 실패';
-                }
+                $response['message'] = '파일 업로드 중 오류가 발생했습니다.';
             }
         }
     }
 } else {
-    $response['message'] = '업로드된 파일이 없습니다.';
+    $response['message'] = '업로드할 파일을 선택해주세요.';
 }
 
 // JSON 응답 출력
