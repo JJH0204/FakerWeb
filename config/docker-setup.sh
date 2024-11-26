@@ -12,7 +12,7 @@ detect_os() {
             if [ -f "/etc/os-release" ]; then
                 if grep -qi "ubuntu" /etc/os-release; then
                     os_dist="ubuntu"
-                elif grep -qi "rhel\|centos\|fedora" /etc/os-release; then
+                elif grep -qi "rhel\|centos\|fedora\|rocky" /etc/os-release; then
                     os_dist="redhat"
                 fi
             fi
@@ -45,25 +45,35 @@ get_user_info() {
             case "$dist" in
                 "ubuntu")
                     # Ubuntu typically uses 33 for www-data
-                    echo "Using Ubuntu-specific www-data (33:33)"
+                    echo "USER_ID=${user_id}"
+                    echo "GROUP_ID=${group_id}"
+                    echo "WEB_USER=www-data"
+                    echo "WEB_GROUP=www-data"
                     ;;
                 "redhat")
-                    # RHEL/CentOS typically uses 48 for apache
-                    echo "Using RHEL-specific apache (48:48)"
+                    # RHEL/CentOS/Rocky typically uses 48 for apache
+                    echo "USER_ID=${user_id}"
+                    echo "GROUP_ID=${group_id}"
+                    echo "WEB_USER=apache"
+                    echo "WEB_GROUP=apache"
                     ;;
             esac
             ;;
-        "macos"|"windows")
+        "macos")
             user_id=$(id -u)
             group_id=$(id -g)
+            echo "USER_ID=${user_id}"
+            echo "GROUP_ID=${group_id}"
+            echo "WEB_USER=www-data"
+            echo "WEB_GROUP=www-data"
             ;;
         *)
-            echo "Unsupported operating system"
-            exit 1
+            echo "USER_ID=1000"
+            echo "GROUP_ID=1000"
+            echo "WEB_USER=www-data"
+            echo "WEB_GROUP=www-data"
             ;;
     esac
-
-    echo "$user_id:$group_id"
 }
 
 # Set up environment variables for Docker
@@ -73,44 +83,30 @@ setup_env() {
     local ids=$3
 
     # Export user and group IDs
-    export USER_ID=$(echo "$ids" | cut -d: -f1)
-    export GROUP_ID=$(echo "$ids" | cut -d: -f2)
+    export USER_ID=$(echo "$ids" | grep "USER_ID=" | cut -d= -f2)
+    export GROUP_ID=$(echo "$ids" | grep "GROUP_ID=" | cut -d= -f2)
+    export WEB_USER=$(echo "$ids" | grep "WEB_USER=" | cut -d= -f2)
+    export WEB_GROUP=$(echo "$ids" | grep "WEB_GROUP=" | cut -d= -f2)
 
     # Create .env file for docker-compose
     cat > .env << EOF
 USER_ID=$USER_ID
 GROUP_ID=$GROUP_ID
 LINUX_DIST=${dist}
+WEB_USER=$WEB_USER
+WEB_GROUP=$WEB_GROUP
 EOF
 
     # Platform-specific settings
     case "$os" in
         "linux")
             echo "DOCKER_BUILDKIT=1" >> .env
-            case "$dist" in
-                "ubuntu")
-                    echo "WEB_USER=www-data" >> .env
-                    echo "WEB_GROUP=www-data" >> .env
-                    ;;
-                "redhat")
-                    echo "WEB_USER=apache" >> .env
-                    echo "WEB_GROUP=apache" >> .env
-                    ;;
-                *)
-                    echo "WEB_USER=www-data" >> .env
-                    echo "WEB_GROUP=www-data" >> .env
-                    ;;
-            esac
             ;;
         "macos")
             echo "DOCKER_BUILDKIT=1" >> .env
-            echo "WEB_USER=www-data" >> .env
-            echo "WEB_GROUP=www-data" >> .env
             ;;
         "windows")
             echo "COMPOSE_CONVERT_WINDOWS_PATHS=1" >> .env
-            echo "WEB_USER=www-data" >> .env
-            echo "WEB_GROUP=www-data" >> .env
             ;;
     esac
 }
@@ -157,7 +153,7 @@ echo "Detected OS: $OS"
 install_requirements "$OS" "$DIST"
 
 USER_INFO=$(get_user_info "$OS" "$DIST")
-echo "Using user:group = $USER_INFO"
+echo "Using user:group = $(echo "$USER_INFO" | grep "USER_ID=" | cut -d= -f2):$(echo "$USER_INFO" | grep "GROUP_ID=" | cut -d= -f2)"
 
 setup_env "$OS" "$DIST" "$USER_INFO"
 
