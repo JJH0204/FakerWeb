@@ -265,7 +265,7 @@ footer {
 
 .hero {
     background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-        url('./image/home/faker/main_banner_img2.jpg');
+        url('../image/home/faker/main_banner_img2.jpg');
     background-size: cover;
     background-position: top center;
     height: 100vh;
@@ -416,7 +416,7 @@ footer {
 
 .achievement-card {
     background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-        url('./image/home/faker/Faker-Nominated-Best-Esports-Player-TGA-2024.jpg');
+        url('../image/home/faker/Faker-Nominated-Best-Esports-Player-TGA-2024.jpg');
     background-size: cover;
     background-position: center;
     padding: 2rem;
@@ -453,15 +453,15 @@ footer {
 }
 
 .achievement-card:nth-child(1) {
-    background-image: url('./image/home/faker/dataimagewebpbase64UklGRpzKAwBXRUJQVlA4IJDKAwDQrgq-a912cf6c61ab272fc605ffb60d01121a.webp');
+    background-image: url('../image/home/faker/dataimagewebpbase64UklGRpzKAwBXRUJQVlA4IJDKAwDQrgq-a912cf6c61ab272fc605ffb60d01121a.webp');
 }
 
 .achievement-card:nth-child(2) {
-    background-image: url('./image/home/faker/Faker-Nominated-Best-Esports-Player-TGA-2024.jpg');
+    background-image: url('../image/home/faker/Faker-Nominated-Best-Esports-Player-TGA-2024.jpg');
 }
 
 .achievement-card:nth-child(3) {
-    background-image: url('./image/home/faker/Faker.jpg');
+    background-image: url('../image/home/faker/Faker.jpg');
 }
 
 .achievement-card:hover {
@@ -744,8 +744,8 @@ h3 {
     }
 }
 
-.quote-background.bg1 { background-image: url('./image/home/faker/GbZsC9IaEAA8-Nx.jpg'); }
-.quote-background.bg2 { background-image: url('./image/home/faker/Faker.jpg'); }
-.quote-background.bg3 { background-image: url('./image/home/faker/Faker-Nominated-Best-Esports-Player-TGA-2024.jpg'); }
-.quote-background.bg4 { background-image: url('./image/home/faker/dataimagewebpbase64UklGRpzKAwBXRUJQVlA4IJDKAwDQrgq-a912cf6c61ab272fc605ffb60d01121a.webp'); }
-.quote-background.bg5 { background-image: url('./image/home/faker/The-Game-June-2024-Article-Banner-WIDE_Faker.jpg'); }
+.quote-background.bg1 { background-image: url('../image/home/faker/GbZsC9IaEAA8-Nx.jpg'); }
+.quote-background.bg2 { background-image: url('../image/home/faker/Faker.jpg'); }
+.quote-background.bg3 { background-image: url('../image/home/faker/Faker-Nominated-Best-Esports-Player-TGA-2024.jpg'); }
+.quote-background.bg4 { background-image: url('../image/home/faker/dataimagewebpbase64UklGRpzKAwBXRUJQVlA4IJDKAwDQrgq-a912cf6c61ab272fc605ffb60d01121a.webp'); }
+.quote-background.bg5 { background-image: url('../image/home/faker/The-Game-June-2024-Article-Banner-WIDE_Faker.jpg'); }
