@@ -2,70 +2,83 @@
 
 # Detect operating system and distribution
 detect_os() {
-    local os_type
-    local os_dist=""
+    local os
+    local dist
 
     case "$(uname -s)" in
         Linux*)
-            os_type="linux"
-            # Detect Linux distribution
-            if [ -f "/etc/os-release" ]; then
-                if grep -qi "ubuntu" /etc/os-release; then
-                    os_dist="ubuntu"
-                elif grep -qi "rhel\|centos\|fedora\|rocky" /etc/os-release; then
-                    os_dist="redhat"
-                fi
+            os="linux"
+            if [ -f /etc/os-release ]; then
+                . /etc/os-release
+                case "$ID" in
+                    ubuntu)
+                        dist="ubuntu"
+                        ;;
+                    kali)
+                        dist="kali"
+                        ;;
+                    rhel|redhat)
+                        dist="redhat"
+                        ;;
+                    centos)
+                        dist="centos"
+                        ;;
+                    rocky)
+                        dist="rocky"
+                        ;;
+                    *)
+                        dist="ubuntu"  # fallback to ubuntu
+                        ;;
+                esac
+            else
+                dist="ubuntu"  # fallback to ubuntu if /etc/os-release doesn't exist
             fi
             ;;
-        Darwin*)    
-            os_type="macos"
+        Darwin*)
+            os="macos"
+            dist=""
             ;;
-        CYGWIN*|MINGW*|MSYS*) 
-            os_type="windows"
+        CYGWIN*|MINGW32*|MSYS*|MINGW*)
+            os="windows"
+            dist=""
             ;;
-        *)          
-            os_type="unknown"
+        *)
+            os="unknown"
+            dist=""
             ;;
     esac
-    echo "${os_type}:${os_dist}"
+
+    echo "$os:$dist"
 }
 
 # Get user and group IDs based on OS
 get_user_info() {
     local os=$1
     local dist=$2
-
-    # Get current user and group IDs
-    local user_id=$(id -u)
-    local group_id=$(id -g)
-
-    # Set default web user and group
-    local web_user="www-data"
-    local web_group="www-data"
+    local user_info=""
 
     case "$os" in
         "linux")
-            case "$dist" in
-                "redhat")
-                    web_user="apache"
-                    web_group="apache"
-                    ;;
-            esac
+            # For RedHat-based systems, use apache user/group
+            if [ "$dist" = "redhat" ] || [ "$dist" = "centos" ] || [ "$dist" = "rocky" ]; then
+                user_info="WEB_USER=apache\nWEB_GROUP=apache"
+            else
+                user_info="WEB_USER=www-data\nWEB_GROUP=www-data"
+            fi
+            user_info="$user_info\nUSER_ID=$(id -u)\nGROUP_ID=$(id -g)"
             ;;
-        "macos"|"windows")
-            # Use www-data for non-Linux systems
-            web_user="www-data"
-            web_group="www-data"
+        "macos")
+            user_info="WEB_USER=www-data\nWEB_GROUP=www-data\nUSER_ID=$(id -u)\nGROUP_ID=$(id -g)"
+            ;;
+        "windows")
+            user_info="WEB_USER=www-data\nWEB_GROUP=www-data\nUSER_ID=1000\nGROUP_ID=1000"
+            ;;
+        *)
+            user_info="WEB_USER=www-data\nWEB_GROUP=www-data\nUSER_ID=1000\nGROUP_ID=1000"
             ;;
     esac
 
-    # Export all variables
-    cat << EOF
-USER_ID=${user_id}
-GROUP_ID=${group_id}
-WEB_USER=${web_user}
-WEB_GROUP=${web_group}
-EOF
+    echo -e "$user_info"
 }
 
 # Set up environment variables for Docker
@@ -117,40 +130,36 @@ install_requirements() {
     local os=$1
     local dist=$2
 
-    echo "Checking and installing required packages..."
-
-    case "$os" in
-        "linux")
-            case "$dist" in
-                "ubuntu")
-                    if ! command -v docker &> /dev/null; then
-                        echo "Installing Docker..."
+    echo "Checking Docker installation..."
+    if ! command -v docker &> /dev/null; then
+        echo "Docker is not installed."
+        case "$os" in
+            "linux")
+                case "$dist" in
+                    "ubuntu"|"kali")
+                        echo "Installing Docker for Ubuntu/Kali..."
                         sudo apt-get update
                         sudo apt-get install -y docker.io docker-compose
-                    fi
-                    ;;
-                "redhat")
-                    if ! command -v docker &> /dev/null; then
-                        echo "Installing Docker..."
+                        ;;
+                    "redhat"|"centos"|"rocky")
+                        echo "Installing Docker for RHEL/CentOS/Rocky..."
                         sudo dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
                         sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-                    fi
-                    ;;
-            esac
-            ;;
-        "macos")
-            if ! command -v docker &> /dev/null; then
+                        sudo systemctl start docker
+                        sudo systemctl enable docker
+                        ;;
+                esac
+                ;;
+            "macos")
                 echo "Please install Docker Desktop for Mac from https://www.docker.com/products/docker-desktop"
-                exit 1
-            fi
-            ;;
-        "windows")
-            if ! command -v docker &> /dev/null; then
+                ;;
+            "windows")
                 echo "Please install Docker Desktop for Windows from https://www.docker.com/products/docker-desktop"
-                exit 1
-            fi
-            ;;
-    esac
+                ;;
+        esac
+    else
+        echo "Docker is already installed."
+    fi
 }
 
 # Main execution
@@ -161,15 +170,13 @@ DIST=$(echo $OS_INFO | cut -d: -f2)
 echo "Detected OS: $OS"
 echo "Detected Distribution: $DIST"
 
+# Get user info
+USER_INFO=$(get_user_info "$OS" "$DIST")
+
+# Set up environment
+setup_env "$OS" "$DIST" "$USER_INFO"
+
 # Install requirements
 install_requirements "$OS" "$DIST"
 
-# Get user information
-USER_INFO=$(get_user_info "$OS" "$DIST")
-echo "Using user settings:"
-echo "$USER_INFO"
-
-# Setup environment
-setup_env "$OS" "$DIST" "$USER_INFO"
-
-echo "Environment setup complete."
+echo "Setup complete. You can now run 'docker-compose up -d' to start the services."

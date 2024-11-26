@@ -8,7 +8,7 @@ ARG OS_TYPE
 
 # Install system dependencies based on distribution
 RUN if [ "$OS_TYPE" = "linux" ]; then \
-        if [ "$LINUX_DIST" = "ubuntu" ]; then \
+        if [ "$LINUX_DIST" = "ubuntu" ] || [ "$LINUX_DIST" = "kali" ]; then \
             apt-get update && apt-get install -y \
             libpng-dev \
             libjpeg-dev \
@@ -16,10 +16,8 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
             zip \
             unzip \
             mariadb-client; \
-        elif [ "$LINUX_DIST" = "redhat" ]; then \
-            dnf install -y epel-release && \
-            dnf config-manager --set-enabled crb && \
-            dnf install -y \
+        elif [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ]; then \
+            dnf update -y && dnf install -y \
             libpng-devel \
             libjpeg-devel \
             freetype-devel \
@@ -45,7 +43,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli
 
 # Enable Apache modules and configure based on distribution
-RUN if [ "$OS_TYPE" = "linux" ] && [ "$LINUX_DIST" = "redhat" ]; then \
+RUN if [ "$OS_TYPE" = "linux" ] && ( [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ] ); then \
         echo "ServerName localhost" > /etc/apache2/conf-available/server-name.conf && \
         echo "LoadModule rewrite_module modules/mod_rewrite.so" > /etc/apache2/mods-available/rewrite.load && \
         echo "LoadModule headers_module modules/mod_headers.so" > /etc/apache2/mods-available/headers.load && \
@@ -64,7 +62,7 @@ RUN echo "upload_max_filesize = 10M" > /usr/local/etc/php/conf.d/uploads.ini \
 RUN mkdir -p /var/www/html/image/share /var/www/html/logs
 
 # Update user/group IDs (use www-data by default)
-RUN if [ "$OS_TYPE" = "linux" ] && [ "$LINUX_DIST" = "redhat" ]; then \
+RUN if [ "$OS_TYPE" = "linux" ] && ( [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ] ); then \
         groupmod -o -g ${GROUP_ID} apache || true && \
         usermod -o -u ${USER_ID} -g ${GROUP_ID} apache || true && \
         chown -R apache:apache /var/www/html; \
