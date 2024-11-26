@@ -71,6 +71,7 @@ if (isset($_FILES['images'])) {
     if (!isset($file['tmp_name'][0]) || empty($file['tmp_name'][0])) {
         $response['message'] = '업로드된 파일이 없습니다.';
     } else {
+        // pathinfo() 함수는 마지막 확장자만 검사
         $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         

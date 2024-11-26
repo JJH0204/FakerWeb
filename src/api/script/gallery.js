@@ -16,26 +16,39 @@ document.addEventListener('DOMContentLoaded', async function() {
             return;
         }
 
-        // 이미지 정렬 (번호순)
+        // 이미지 정렬 (번호순 - 안전하게 처리)
         data.images.sort((a, b) => {
-            const numA = parseInt(a.name.match(/\d+/)[0]);
-            const numB = parseInt(b.name.match(/\d+/)[0]);
+            const matchA = a.name.match(/\d+/);
+            const matchB = b.name.match(/\d+/);
+            
+            // 숫자가 없는 파일은 마지막으로
+            if (!matchA) return 1;
+            if (!matchB) return -1;
+            
+            const numA = parseInt(matchA[0]);
+            const numB = parseInt(matchB[0]);
             return numA - numB;
         });
 
-        // 이미지 표시
+        // 이미지 표시 (이미지 파일만 표시)
         data.images.forEach(image => {
-            const galleryItem = document.createElement('div');
-            galleryItem.className = 'gallery-item';
+            // 이미지 확장자 확인
+            const ext = image.name.split('.').pop().toLowerCase();
+            const allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
             
-            galleryItem.innerHTML = `
-                <img src="../image/share/${image.name}" 
-                     alt="Faker Image" 
-                     loading="lazy"
-                     onerror="this.onerror=null; this.src='../assets/images/error.png'; this.setAttribute('data-error', '${image.name}')">
-            `;
+            if (allowedExts.includes(ext)) {
+                const galleryItem = document.createElement('div');
+                galleryItem.className = 'gallery-item';
+                
+                galleryItem.innerHTML = `
+                    <img src="../image/share/${image.name}" 
+                         alt="Faker Image" 
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='../assets/images/error.png'; this.setAttribute('data-error', '${image.name}')">
+                `;
 
-            galleryGrid.appendChild(galleryItem);
+                galleryGrid.appendChild(galleryItem);
+            }
         });
 
     } catch (error) {

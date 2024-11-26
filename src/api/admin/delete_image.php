@@ -1,14 +1,14 @@
 <?php
-// 모든 출력 버퍼 비우기
-while (ob_get_level()) {
-    ob_end_clean();
-}
-
+// 세션 시작 전에 출력 버퍼 초기화
+ob_start();
 session_start();
 require_once '../auth/check_session.php';
 
 // 응답 헤더 설정
 header('Content-Type: application/json; charset=utf-8');
+
+// 이전 출력 버퍼 제거
+ob_clean();
 
 // 응답 초기화
 $response = ['success' => false, 'message' => ''];
@@ -51,13 +51,16 @@ try {
         $response['success'] = true;
         $response['message'] = '이미지가 성공적으로 삭제되었습니다.';
     } else {
-        throw new Exception('이미지 삭제에 실패했습니다.');
+        throw new Exception('파일 삭제 중 오류가 발생했습니다.');
     }
-
 } catch (Exception $e) {
     $response['message'] = $e->getMessage();
     error_log('이미지 삭제 오류: ' . $e->getMessage());
 }
 
-// JSON 응답만 출력
-die(json_encode($response, JSON_UNESCAPED_UNICODE));
+// JSON 응답 전에 마지막으로 출력 버퍼 정리
+ob_clean();
+
+// JSON 응답 출력
+echo json_encode($response, JSON_UNESCAPED_UNICODE);
+exit();
