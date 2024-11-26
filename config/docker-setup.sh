@@ -86,18 +86,22 @@ setup_env() {
     # OS-specific settings
     case "$os" in
         "linux")
+            echo "OS_TYPE=linux" >> .env
             echo "LINUX_DIST=$dist" >> .env
             ;;
         "macos")
+            echo "OS_TYPE=macos" >> .env
             echo "LINUX_DIST=ubuntu" >> .env
             echo "DOCKER_BUILDKIT=1" >> .env
             echo "COMPOSE_DOCKER_CLI_BUILD=1" >> .env
             ;;
         "windows")
+            echo "OS_TYPE=windows" >> .env
             echo "LINUX_DIST=ubuntu" >> .env
             echo "COMPOSE_CONVERT_WINDOWS_PATHS=1" >> .env
             ;;
         *)
+            echo "OS_TYPE=unknown" >> .env
             echo "LINUX_DIST=ubuntu" >> .env
             ;;
     esac

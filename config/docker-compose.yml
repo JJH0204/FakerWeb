@@ -6,6 +6,7 @@ services:
       args:
         USER_ID: ${USER_ID:-1000}
         GROUP_ID: ${GROUP_ID:-1000}
+        OS_TYPE: ${OS_TYPE:-linux}
         LINUX_DIST: ${LINUX_DIST:-ubuntu}
     ports:
       - "8080:80"
