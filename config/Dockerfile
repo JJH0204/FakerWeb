@@ -13,7 +13,7 @@ RUN if [ "$LINUX_DIST" = "ubuntu" ]; then \
         libfreetype6-dev \
         zip \
         unzip \
-        default-mysql-client; \
+        mariadb-client; \
     elif [ "$LINUX_DIST" = "redhat" ]; then \
         dnf install -y epel-release && \
         dnf config-manager --set-enabled crb && \
@@ -23,7 +23,9 @@ RUN if [ "$LINUX_DIST" = "ubuntu" ]; then \
         freetype-devel \
         zip \
         unzip \
-        mysql && \
+        mariadb \
+        httpd \
+        mod_ssl && \
         dnf clean all; \
     else \
         apt-get update && apt-get install -y \
@@ -32,22 +34,22 @@ RUN if [ "$LINUX_DIST" = "ubuntu" ]; then \
         libfreetype6-dev \
         zip \
         unzip \
-        default-mysql-client; \
+        mariadb-client; \
     fi
 
 # Configure and install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli
 
-# Enable Apache modules
-RUN a2enmod rewrite headers
-
-# Set up Apache configuration based on distribution
+# Enable Apache modules and configure based on distribution
 RUN if [ "$LINUX_DIST" = "redhat" ]; then \
-        echo "ServerName localhost" > /etc/httpd/conf.d/server-name.conf && \
-        sed -i 's/User apache/User ${WEB_USER}/g' /etc/httpd/conf/httpd.conf && \
-        sed -i 's/Group apache/Group ${WEB_GROUP}/g' /etc/httpd/conf/httpd.conf; \
+        echo "ServerName localhost" > /etc/apache2/conf-available/server-name.conf && \
+        echo "LoadModule rewrite_module modules/mod_rewrite.so" > /etc/apache2/mods-available/rewrite.load && \
+        echo "LoadModule headers_module modules/mod_headers.so" > /etc/apache2/mods-available/headers.load && \
+        ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/ && \
+        ln -s /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/; \
     else \
+        a2enmod rewrite headers && \
         echo "ServerName localhost" >> /etc/apache2/apache2.conf; \
     fi
 
@@ -58,13 +60,15 @@ RUN echo "upload_max_filesize = 10M" > /usr/local/etc/php/conf.d/uploads.ini \
 # Create required directories
 RUN mkdir -p /var/www/html/image/share /var/www/html/logs
 
-# Update www-data user/group IDs
+# Update user/group IDs
 RUN if [ "$LINUX_DIST" = "redhat" ]; then \
         groupmod -o -g ${GROUP_ID} apache || true && \
-        usermod -o -u ${USER_ID} -g ${GROUP_ID} apache || true; \
+        usermod -o -u ${USER_ID} -g ${GROUP_ID} apache || true && \
+        chown -R apache:apache /var/www/html; \
     else \
         groupmod -o -g ${GROUP_ID} www-data || true && \
-        usermod -o -u ${USER_ID} -g ${GROUP_ID} www-data || true; \
+        usermod -o -u ${USER_ID} -g ${GROUP_ID} www-data || true && \
+        chown -R www-data:www-data /var/www/html; \
     fi
 
 # Copy entrypoint script
