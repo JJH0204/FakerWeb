@@ -9,13 +9,21 @@ ARG OS_TYPE
 # Install system dependencies based on distribution
 RUN if [ "$OS_TYPE" = "linux" ]; then \
         if [ "$LINUX_DIST" = "ubuntu" ] || [ "$LINUX_DIST" = "kali" ]; then \
-            apt-get update && apt-get install -y \
+            apt-get update --allow-releaseinfo-change || true && \
+            apt-get install -y \
             libpng-dev \
             libjpeg-dev \
             libfreetype6-dev \
             zip \
             unzip \
-            mariadb-client; \
+            mariadb-client \
+            || apt-get install -y \
+            libpng-dev \
+            libjpeg-dev \
+            libfreetype6-dev \
+            zip \
+            unzip \
+            default-mysql-client; \
         elif [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ]; then \
             dnf update -y && dnf install -y \
             libpng-devel \
@@ -29,13 +37,21 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
             dnf clean all; \
         fi \
     else \
-        apt-get update && apt-get install -y \
+        apt-get update --allow-releaseinfo-change || true && \
+        apt-get install -y \
         libpng-dev \
         libjpeg-dev \
         libfreetype6-dev \
         zip \
         unzip \
-        mariadb-client; \
+        mariadb-client \
+        || apt-get install -y \
+        libpng-dev \
+        libjpeg-dev \
+        libfreetype6-dev \
+        zip \
+        unzip \
+        default-mysql-client; \
     fi
 
 # Configure and install PHP extensions
