@@ -1,12 +1,12 @@
 services:
   fakerweb:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: config/Dockerfile
     ports:
       - "8080:80"
     volumes:
-      - ./src:/var/www/html
+      - ../src:/var/www/html
     depends_on:
       - fakerdb
     networks:

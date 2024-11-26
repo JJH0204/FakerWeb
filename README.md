@@ -14,7 +14,7 @@
 1. 저장소 클론
 ```bash
 git clone https://github.com/JJH0204/FakerWeb.git
-cd FakerWeb
+cd FakerWeb/config
 ```
 
 2. Docker 컨테이너 실행

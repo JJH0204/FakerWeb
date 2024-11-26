@@ -1,0 +1,140 @@
+.header {
+    background-color: var(--dark-gray);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.header h1 {
+    margin: 0;
+    color: var(--primary-red);
+}
+
+.admin-btn {
+    background-color: var(--dark-gray);
+    color: white;
+    border: 1px solid var(--primary-red);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.admin-btn:hover {
+    background-color: var(--primary-red);
+}
+
+.logout-btn {
+    background-color: var(--primary-red);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.image-manager {
+    padding: 2rem;
+}
+
+.upload-section {
+    background-color: var(--light-gray);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.upload-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin: 1rem 0;
+}
+
+.preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.image-item {
+    background-color: var(--light-gray);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.image-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.image-info {
+    padding: 1rem;
+}
+
+.image-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.category-filter {
+    margin-bottom: 1rem;
+}
+
+.admin-tabs {
+    background-color: var(--dark-gray);
+    border-top: 1px solid var(--primary-red);
+    padding: 0 1rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.tab-item {
+    color: white;
+    text-decoration: none;
+    padding: 1rem;
+    position: relative;
+    transition: color 0.3s;
+}
+
+.tab-item:hover {
+    color: var(--primary-red);
+}
+
+.tab-item.active {
+    color: var(--primary-red);
+}
+
+.tab-item.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary-red);
+}
