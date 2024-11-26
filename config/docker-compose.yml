@@ -45,9 +45,6 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./html:/usr/share/nginx/html:ro
-      - ./modsecurity.conf:/etc/modsecurity/modsecurity.conf:ro
-      - ./crs:/etc/nginx/modsec-crs:ro
       - ./nginx.conf:/etc/nginx/templates/conf.d/default.conf.template:ro
     depends_on:
       - fakerweb
