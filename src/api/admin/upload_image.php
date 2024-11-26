@@ -9,8 +9,20 @@ ob_clean();
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-cache, must-revalidate');
 
+// 프로젝트 루트 디렉토리 설정
+$projectRoot = realpath(__DIR__ . '/../../');
+
 // 업로드 디렉토리 설정
-$uploadDir = '../../image/share/';
+$uploadDir = $projectRoot . '/image/share/';
+
+// 업로드 디렉토리가 없으면 생성
+if (!is_dir($uploadDir)) {
+    if (!mkdir($uploadDir, 0777, true)) {
+        $response = ['success' => false, 'message' => '업로드 디렉토리를 생성할 수 없습니다.'];
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+}
 
 // 응답 초기화
 $response = ['success' => false, 'message' => ''];

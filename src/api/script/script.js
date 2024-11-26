@@ -75,59 +75,57 @@ window.addEventListener('scroll', () => {
 
 async function loadImages() {
     const imageGrid = document.getElementById('imageGrid');
-    const baseUrl = './image/share/';
-    const images = [];
-    const imageFormats = ['.jpg', '.webp', '.png', '.jpg_large'];
+    if (!imageGrid) return;
 
-    // 이미지 파일 존재 여부 확인 함수
-    async function checkImageExists(url) {
-        try {
-            const response = await fetch(url);
-            return response.ok;
-        } catch {
-            return false;
+    try {
+        // API를 통해 이미지 목록 가져오기
+        const response = await fetch('./api/admin/get_images.php');
+        if (!response.ok) {
+            throw new Error('Failed to fetch images');
         }
-    }
 
-    // 이미지 파일 찾기
-    let imageNumber = 1;
-    outerLoop: while (true) {
-        let imageFound = false;
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to load images');
+        }
 
-        // 각 이미지 번호에 대해 모든 포맷 확인
-        for (const format of imageFormats) {
-            const imageUrl = `${baseUrl}image${imageNumber}${format}`;
-            if (await checkImageExists(imageUrl)) {
-                images.push({
-                    number: imageNumber,
-                    url: imageUrl
-                });
-                imageFound = true;
-                imageNumber++;
-                continue outerLoop;
+        // 날짜 기준으로 정렬 (YYYYMMDD 형식)
+        const sortedImages = data.images.sort((a, b) => {
+            const dateA = a.name.match(/\d{8}/);
+            const dateB = b.name.match(/\d{8}/);
+            
+            if (dateA && dateB) {
+                return dateB[0].localeCompare(dateA[0]);
             }
-        }
+            return 0;
+        });
 
-        // 모든 포맷에서 이미지를 찾지 못했다면 종료
-        if (!imageFound) {
-            break;
-        }
+        // 최신 5개 이미지만 표시
+        const recentImages = sortedImages.slice(0, 5);
+
+        // 기존 이미지 제거
+        imageGrid.innerHTML = '';
+
+        // 이미지 요소 생성 및 추가
+        recentImages.forEach(image => {
+            const imgElement = document.createElement('img');
+            imgElement.src = image.url;
+            imgElement.alt = `Faker 이미지 ${image.name}`;
+            imgElement.className = 'gallery-image';
+            
+            // 이미지 로드 실패 시 대체 이미지 표시
+            imgElement.onerror = () => {
+                imgElement.src = './image/default-image.jpg';
+                imgElement.alt = '이미지를 불러올 수 없습니다';
+            };
+
+            imageGrid.appendChild(imgElement);
+        });
+
+    } catch (error) {
+        console.error('이미지 로드 중 오류 발생:', error);
+        imageGrid.innerHTML = '<p class="error-message">이미지를 불러오는 중 오류가 발생했습니다.</p>';
     }
-
-    // 이미지 번호 기준 내림차순 정렬
-    images.sort((a, b) => b.number - a.number);
-
-    // 상위 5개 이미지만 표시
-    const imagesToShow = images.slice(0, 5);
-
-    // 이미지 요소 생성 및 추가
-    imagesToShow.forEach(image => {
-        const imgElement = document.createElement('img');
-        imgElement.src = image.url;
-        imgElement.alt = `Faker 이미지 ${image.number}`;
-        imgElement.className = 'gallery-image';
-        imageGrid.appendChild(imgElement);
-    });
 }
 
 // 모달 관련 코드를 DOMContentLoaded 이벤트 핸들러 안으로 이동

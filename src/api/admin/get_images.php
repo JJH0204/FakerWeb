@@ -16,17 +16,11 @@ ini_set('log_errors', 1);
 // 세션 시작
 session_start();
 
-require_once(__DIR__ . '/../auth/check_session.php');
+// 프로젝트 루트 디렉토리 설정
+$projectRoot = realpath(__DIR__ . '/../../');
 
-if (!isValidAdminSession()) {
-    error_log("관리자 세션 검증 실패");
-    http_response_code(401);
-    ob_end_clean();
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
-    exit;
-}
-
-$imageDir = __DIR__ . '/../../image/share/';
+// 이미지 디렉토리 경로 설정 (프로젝트 루트 기준)
+$imageDir = $projectRoot . '/image/share/';
 $response = ['success' => false, 'images' => [], 'message' => ''];
 
 try {
@@ -52,7 +46,7 @@ try {
             if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
                 $images[] = [
                     'name' => $file,
-                    'url' => '../image/share/' . $file
+                    'url' => './image/share/' . $file  // 웹 루트 기준 상대 경로
                 ];
             }
         }
