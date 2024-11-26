@@ -16,6 +16,49 @@ echo "██║     ██║  ██║██║  ██╗██████�
 echo "╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═════╝ "
 echo -e "${NC}"
 
+# Docker 그룹 멤버십 확인 및 권한 처리
+check_docker_permissions() {
+    if ! groups | grep -q docker; then
+        echo -e "${RED}Error: Current user is not in the docker group${NC}"
+        echo "Please run the following commands to fix this:"
+        echo -e "${YELLOW}sudo usermod -aG docker $USER${NC}"
+        echo -e "${YELLOW}newgrp docker${NC}"
+        echo "Then try running this script again."
+        exit 1
+    fi
+}
+
+# Docker Compose 설치 확인
+check_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    elif docker compose version &> /dev/null; then
+        echo "docker compose"
+    else
+        echo -e "${RED}Error: Docker Compose is not installed${NC}"
+        echo "Please install Docker Compose first:"
+        echo -e "${YELLOW}sudo apt-get update && sudo apt-get install -y docker-compose-plugin${NC}"
+        exit 1
+    fi
+}
+
+# Docker 데몬 실행 확인
+check_docker_daemon() {
+    if ! docker info &> /dev/null; then
+        echo -e "${RED}Error: Docker daemon is not running${NC}"
+        echo "Please start Docker daemon:"
+        echo -e "${YELLOW}sudo systemctl start docker${NC}"
+        exit 1
+    fi
+}
+
+# 초기 검사 실행
+check_docker_permissions
+check_docker_daemon
+
+# Docker Compose 명령어 저장
+DOCKER_COMPOSE_CMD=$(check_docker_compose)
+
 # Docker Compose 명령어 확인
 check_docker_compose() {
     if command -v docker-compose &> /dev/null; then
@@ -24,9 +67,6 @@ check_docker_compose() {
         echo "docker compose"
     fi
 }
-
-# Docker Compose 명령어 저장
-DOCKER_COMPOSE_CMD=$(check_docker_compose)
 
 # 함수: 서비스 상태 확인
 check_service_status() {
