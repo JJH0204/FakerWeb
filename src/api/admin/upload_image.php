@@ -69,7 +69,7 @@ if (isset($_FILES['images'])) {
     $file = $_FILES['images'];
 
     // 허용된 MIME 타입 정의
-    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
     if (!isset($file['tmp_name'][0]) || empty($file['tmp_name'][0])) {
         $response['message'] = '업로드된 파일이 없습니다.';
