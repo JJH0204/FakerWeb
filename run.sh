@@ -16,6 +16,18 @@ echo "██║     ██║  ██║██║  ██╗██████�
 echo "╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═════╝ "
 echo -e "${NC}"
 
+# Docker Compose 명령어 확인
+check_docker_compose() {
+    if command -v docker-compose &> /dev/null; then
+        echo "docker-compose"
+    else
+        echo "docker compose"
+    fi
+}
+
+# Docker Compose 명령어 저장
+DOCKER_COMPOSE_CMD=$(check_docker_compose)
+
 # 함수: 서비스 상태 확인
 check_service_status() {
     local container_name=$1
@@ -52,20 +64,25 @@ check_all_services() {
 
 # 함수: 서비스 시작
 start_services() {
-    echo -e "\n${YELLOW}Starting services...${NC}"
+    echo "🚀 도커 서비스를 시작합니다..."
     cd config
-    docker-compose down --volumes 2>/dev/null
-    docker-compose up -d --build
+    $DOCKER_COMPOSE_CMD down --volumes 2>/dev/null
+    $DOCKER_COMPOSE_CMD up -d --build
     cd ..
     sleep 5
     check_all_services
+    if [ $? -eq 0 ]; then
+        echo "✅ 서비스가 성공적으로 시작되었습니다."
+    else
+        echo "❌ 서비스 시작 중 오류가 발생했습니다."
+    fi
 }
 
 # 함수: 서비스 중지
 stop_services() {
     echo -e "\n${YELLOW}Stopping services...${NC}"
     cd config
-    docker-compose down --volumes
+    $DOCKER_COMPOSE_CMD down --volumes
     cd ..
     echo -e "${GREEN}All services stopped.${NC}"
 }
@@ -74,7 +91,7 @@ stop_services() {
 view_logs() {
     echo -e "\n${YELLOW}Viewing logs...${NC}"
     cd config
-    docker-compose logs -f
+    $DOCKER_COMPOSE_CMD logs -f
 }
 
 # 메인 메뉴
