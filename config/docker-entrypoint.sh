@@ -31,28 +31,20 @@ echo "Starting service with web group: $WEB_GROUP"
 mkdir -p /var/www/html/image/share
 mkdir -p /var/www/html/logs
 
-# Set permissions with root
+# Set base permissions
 chown -R $WEB_USER:$WEB_GROUP /var/www/html
 find /var/www/html -type d -exec chmod 775 {} \;
 find /var/www/html -type f -exec chmod 664 {} \;
+
+# Set specific directory permissions
 chmod -R 775 /var/www/html/image/share
 chmod -R 775 /var/www/html/logs
 
-# Additional permission fixes for specific directories
-chmod 777 /var/www/html/logs
-chmod 777 /var/www/html/image/share
-
-# Configure Apache based on OS/distribution
+# Start Apache with the appropriate user
 if [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ]; then
     # RHEL/CentOS/Rocky specific configuration
-    # Ensure Apache can write to the directories
-    chown -R apache:apache /var/www/html/logs
-    chown -R apache:apache /var/www/html/image/share
-    exec httpd-foreground
+    exec gosu apache httpd-foreground
 else
-    # Default Apache configuration (Ubuntu/Debian based)
-    # Ensure Apache can write to the directories
-    chown -R www-data:www-data /var/www/html/logs
-    chown -R www-data:www-data /var/www/html/image/share
+    # Ubuntu/Debian specific configuration
     exec apache2-foreground
 fi

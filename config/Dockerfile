@@ -16,14 +16,8 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
             libfreetype6-dev \
             zip \
             unzip \
-            mariadb-client \
-            || apt-get install -y \
-            libpng-dev \
-            libjpeg-dev \
-            libfreetype6-dev \
-            zip \
-            unzip \
-            default-mysql-client; \
+            gosu \
+            mariadb-client || default-mysql-client; \
         elif [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ]; then \
             dnf update -y && dnf install -y \
             libpng-devel \
@@ -34,7 +28,9 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
             mariadb \
             httpd \
             mod_ssl && \
-            dnf clean all; \
+            dnf clean all && \
+            curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.14/gosu-amd64" && \
+            chmod +x /usr/local/bin/gosu; \
         fi \
     else \
         apt-get update --allow-releaseinfo-change || true && \
@@ -44,31 +40,21 @@ RUN if [ "$OS_TYPE" = "linux" ]; then \
         libfreetype6-dev \
         zip \
         unzip \
-        mariadb-client \
-        || apt-get install -y \
-        libpng-dev \
-        libjpeg-dev \
-        libfreetype6-dev \
-        zip \
-        unzip \
-        default-mysql-client; \
+        gosu \
+        mariadb-client || default-mysql-client; \
     fi
 
 # Configure and install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli
 
-# Enable Apache modules and configure based on distribution
-RUN if [ "$OS_TYPE" = "linux" ] && ( [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_DIST" = "centos" ] || [ "$LINUX_DIST" = "rocky" ] ); then \
-        echo "ServerName localhost" > /etc/apache2/conf-available/server-name.conf && \
-        echo "LoadModule rewrite_module modules/mod_rewrite.so" > /etc/apache2/mods-available/rewrite.load && \
-        echo "LoadModule headers_module modules/mod_headers.so" > /etc/apache2/mods-available/headers.load && \
-        ln -s /etc/apache2/mods-available/rewrite.load /etc/apache2/mods-enabled/ && \
-        ln -s /etc/apache2/mods-available/headers.load /etc/apache2/mods-enabled/; \
-    else \
-        a2enmod rewrite headers && \
-        echo "ServerName localhost" >> /etc/apache2/apache2.conf; \
-    fi
+# Enable Apache modules
+RUN a2enmod rewrite
+RUN a2enmod headers
+
+# Configure Apache
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf \
+    && sed -i 's/^Listen 80/Listen 0.0.0.0:80/' /etc/apache2/ports.conf
 
 # Configure PHP
 RUN echo "upload_max_filesize = 10M" > /usr/local/etc/php/conf.d/uploads.ini \
@@ -88,16 +74,15 @@ RUN if [ "$OS_TYPE" = "linux" ] && ( [ "$LINUX_DIST" = "redhat" ] || [ "$LINUX_D
         chown -R www-data:www-data /var/www/html; \
     fi
 
+# Set working directory
+WORKDIR /var/www/html
+
 # Copy entrypoint script
 COPY config/docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Set working directory
-WORKDIR /var/www/html
 
 # Expose port
 EXPOSE 80
 
 # Set entrypoint
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["apache2-foreground"]

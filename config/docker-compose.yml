@@ -9,16 +9,17 @@ services:
         OS_TYPE: ${OS_TYPE:-linux}
         LINUX_DIST: ${LINUX_DIST:-ubuntu}
     ports:
-      - "8080:80"
+      - "8081:80"
     volumes:
       - ../src:/var/www/html
       - ../src/image/share:/var/www/html/image/share
+      - logs:/var/www/html/logs
     environment:
       - APACHE_RUN_USER=${WEB_USER:-www-data}
       - APACHE_RUN_GROUP=${WEB_GROUP:-www-data}
       - PHP_VERSION=${PHP_VERSION:-8.1}
       - APACHE_VERSION=${APACHE_VERSION:-2.4}
-    user: "${WEB_USER:-www-data}:${WEB_GROUP:-www-data}"
+    user: "root:root"
     privileged: true
     depends_on:
       - fakerdb
@@ -42,11 +43,12 @@ services:
   waf-nginx:
     image: owasp/modsecurity-crs:nginx
     ports:
-      - "8081:80"
+      - "8080:80"
     volumes:
       - ./html:/usr/share/nginx/html:ro
       - ./modsecurity.conf:/etc/modsecurity/modsecurity.conf:ro
       - ./crs:/etc/nginx/modsec-crs:ro
+      - ./nginx.conf:/etc/nginx/templates/conf.d/default.conf.template:ro
     depends_on:
       - fakerweb
     environment:
@@ -56,6 +58,7 @@ services:
 
 volumes:
   db_data:
+  logs:
 
 networks:
   app-network:
