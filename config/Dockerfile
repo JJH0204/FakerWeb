@@ -15,13 +15,16 @@ RUN if [ "$LINUX_DIST" = "ubuntu" ]; then \
         unzip \
         default-mysql-client; \
     elif [ "$LINUX_DIST" = "redhat" ]; then \
-        yum install -y \
+        dnf install -y epel-release && \
+        dnf config-manager --set-enabled crb && \
+        dnf install -y \
         libpng-devel \
         libjpeg-devel \
         freetype-devel \
         zip \
         unzip \
-        mariadb; \
+        mysql && \
+        dnf clean all; \
     else \
         apt-get update && apt-get install -y \
         libpng-dev \
