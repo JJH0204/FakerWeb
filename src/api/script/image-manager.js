@@ -211,6 +211,16 @@ document.getElementById('imageUploadForm').addEventListener('submit', async func
             if (typeof result !== 'object') {
                 throw new Error('잘못된 응답 형식');
             }
+
+            // 서버 에러 메시지 확인
+            if (!result.success) {
+                let errorMessage = result.message || '알 수 없는 오류가 발생했습니다.';
+                if (result.error) {
+                    console.error('서버 에러:', result.error);
+                }
+                alert(errorMessage);
+                return;
+            }
         } catch (e) {
             if (responseText.includes('<!DOCTYPE') || responseText.includes('<html')) {
                 alert('세션이 만료되었습니다. 다시 로그인해주세요.');
@@ -221,8 +231,12 @@ document.getElementById('imageUploadForm').addEventListener('submit', async func
             console.error('서버 응답:', responseText);
             console.error('에러 내용:', e);
             
-            // 사용자에게 친숙한 에러 메시지 표시
-            alert('이미지 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+            // 사용자에게 더 자세한 에러 메시지 표시
+            let errorMessage = '이미지 처리 중 오류가 발생했습니다.';
+            if (responseText.includes('Permission denied')) {
+                errorMessage += '\n파일 권한 문제가 발생했습니다. 서버 관리자에게 문의하세요.';
+            }
+            alert(errorMessage);
             return;
         }
         

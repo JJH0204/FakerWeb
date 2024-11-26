@@ -15,10 +15,37 @@ $projectRoot = realpath(__DIR__ . '/../../');
 // 업로드 디렉토리 설정
 $uploadDir = $projectRoot . '/image/share/';
 
-// 업로드 디렉토리가 없으면 생성
+// 에러 로깅 활성화
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', $projectRoot . '/logs/upload_errors.log');
+
+// 업로드 디렉토리 권한 확인
 if (!is_dir($uploadDir)) {
     if (!mkdir($uploadDir, 0777, true)) {
-        $response = ['success' => false, 'message' => '업로드 디렉토리를 생성할 수 없습니다.'];
+        error_log("Failed to create directory: " . $uploadDir . ". Error: " . error_get_last()['message']);
+        $response = [
+            'success' => false,
+            'message' => '업로드 디렉토리를 생성할 수 없습니다. 서버 관리자에게 문의하세요.',
+            'error' => error_get_last()['message']
+        ];
+        echo json_encode($response, JSON_UNESCAPED_UNICODE);
+        exit();
+    }
+    // 생성된 디렉토리의 권한 변경
+    chmod($uploadDir, 0777);
+}
+
+// 기존 디렉토리의 권한 확인 및 수정
+if (!is_writable($uploadDir)) {
+    chmod($uploadDir, 0777);
+    if (!is_writable($uploadDir)) {
+        error_log("Directory not writable: " . $uploadDir);
+        $response = [
+            'success' => false,
+            'message' => '업로드 디렉토리에 쓰기 권한이 없습니다. 서버 관리자에게 문의하세요.'
+        ];
         echo json_encode($response, JSON_UNESCAPED_UNICODE);
         exit();
     }
@@ -80,7 +107,6 @@ if (isset($_FILES['images'])) {
 } else {
     $response['message'] = '업로드된 파일이 없습니다.';
 }
-
 
 // JSON 응답 출력
 echo json_encode($response, JSON_UNESCAPED_UNICODE);
