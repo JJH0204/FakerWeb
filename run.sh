@@ -16,67 +16,75 @@ echo "██║     ██║  ██║██║  ██╗██████�
 echo "╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝ ╚══════╝╚═════╝ "
 echo -e "${NC}"
 
-# Docker 그룹 멤버십 확인 및 권한 처리
+# Docker 권한 확인 및 처리
 check_docker_permissions() {
-    if ! groups | grep -q docker; then
-        echo -e "${RED}Error: Current user is not in the docker group${NC}"
-        echo "Please run the following commands to fix this:"
-        echo -e "${YELLOW}sudo usermod -aG docker $USER${NC}"
-        echo -e "${YELLOW}newgrp docker${NC}"
-        echo "Then try running this script again."
-        exit 1
+    if ! docker info &> /dev/null; then
+        echo -e "${YELLOW}Docker requires root privileges. Running with sudo...${NC}"
+        if ! sudo docker info &> /dev/null; then
+            echo -e "${RED}Error: Cannot connect to Docker daemon${NC}"
+            echo "Please make sure Docker is installed and running"
+            exit 1
+        fi
+        # sudo로 실행 필요
+        export NEED_SUDO=1
+    else
+        # sudo 불필요
+        export NEED_SUDO=0
     fi
 }
 
 # Docker Compose 설치 확인
 check_docker_compose() {
-    if command -v docker-compose &> /dev/null; then
-        echo "docker-compose"
-    elif docker compose version &> /dev/null; then
-        echo "docker compose"
+    local compose_cmd=""
+    
+    if [ "$NEED_SUDO" -eq 1 ]; then
+        if sudo docker compose version &> /dev/null; then
+            compose_cmd="sudo docker compose"
+        elif sudo docker-compose --version &> /dev/null; then
+            compose_cmd="sudo docker-compose"
+        fi
     else
-        echo -e "${RED}Error: Docker Compose is not installed${NC}"
-        echo "Please install Docker Compose first:"
-        echo -e "${YELLOW}sudo apt-get update && sudo apt-get install -y docker-compose-plugin${NC}"
-        exit 1
+        if docker compose version &> /dev/null; then
+            compose_cmd="docker compose"
+        elif docker-compose --version &> /dev/null; then
+            compose_cmd="docker-compose"
+        fi
     fi
-}
 
-# Docker 데몬 실행 확인
-check_docker_daemon() {
-    if ! docker info &> /dev/null; then
-        echo -e "${RED}Error: Docker daemon is not running${NC}"
-        echo "Please start Docker daemon:"
-        echo -e "${YELLOW}sudo systemctl start docker${NC}"
+    if [ -z "$compose_cmd" ]; then
+        echo -e "${RED}Error: Docker Compose is not installed${NC}"
+        echo "Please install Docker Compose first"
         exit 1
     fi
+
+    echo "$compose_cmd"
 }
 
 # 초기 검사 실행
 check_docker_permissions
-check_docker_daemon
 
 # Docker Compose 명령어 저장
 DOCKER_COMPOSE_CMD=$(check_docker_compose)
 
-# Docker Compose 명령어 확인
-check_docker_compose() {
-    if command -v docker-compose &> /dev/null; then
-        echo "docker-compose"
-    else
-        echo "docker compose"
-    fi
-}
-
 # 함수: 서비스 상태 확인
 check_service_status() {
     local container_name=$1
-    if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
-        echo -e "${GREEN}✓ ${container_name} is running${NC}"
-        return 0
+    if [ "$NEED_SUDO" -eq 1 ]; then
+        if sudo docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+            echo -e "${GREEN}✓ ${container_name} is running${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ ${container_name} is not running${NC}"
+            return 1
+        fi
     else
-        echo -e "${RED}✗ ${container_name} is not running${NC}"
-        return 1
+        if docker ps --format '{{.Names}}' | grep -q "^${container_name}$"; then
+            echo -e "${GREEN}✓ ${container_name} is running${NC}"
+            return 0
+        else
+            echo -e "${RED}✗ ${container_name} is not running${NC}"
+            return 1
+        fi
     fi
 }
 
