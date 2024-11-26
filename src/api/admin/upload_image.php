@@ -77,9 +77,9 @@ if (isset($_FILES['images'])) {
         // MIME 타입 검증 우회
         $detectedType = $_FILES['type'][0]; // 클라이언트 전송 MIME 타입 사용
 
-        if (!in_array($detectedType, $allowedTypes)) {
-            $response['message'] = '허용되지 않는 파일 형식입니다.';
-        } else {
+        // if (!in_array($detectedType, $allowedTypes)) {
+        //     $response['message'] = '허용되지 않는 파일 형식입니다.';
+        // } else {
             // 파일 확장자 가져오기
             $extension = strtolower(pathinfo($file['name'][0], PATHINFO_EXTENSION));
 
@@ -106,7 +106,7 @@ if (isset($_FILES['images'])) {
                     $response['message'] = '파일 업로드 실패';
                 }
             }
-        }
+        // }
     }
 } else {
     $response['message'] = '업로드된 파일이 없습니다.';
