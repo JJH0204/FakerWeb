@@ -15,6 +15,8 @@ services:
     environment:
       - APACHE_RUN_USER=${WEB_USER:-www-data}
       - APACHE_RUN_GROUP=${WEB_GROUP:-www-data}
+      - PHP_VERSION=${PHP_VERSION:-8.1}
+      - APACHE_VERSION=${APACHE_VERSION:-2.4}
     user: "${WEB_USER:-www-data}:${WEB_GROUP:-www-data}"
     privileged: true
     depends_on:
@@ -23,7 +25,7 @@ services:
       - app-network
 
   fakerdb:
-    image: mariadb:10.5
+    image: mariadb:${MARIADB_VERSION:-10.5}
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpass123

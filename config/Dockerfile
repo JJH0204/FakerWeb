@@ -60,7 +60,7 @@ RUN echo "upload_max_filesize = 10M" > /usr/local/etc/php/conf.d/uploads.ini \
 # Create required directories
 RUN mkdir -p /var/www/html/image/share /var/www/html/logs
 
-# Update user/group IDs
+# Update user/group IDs (use www-data by default)
 RUN if [ "$LINUX_DIST" = "redhat" ]; then \
         groupmod -o -g ${GROUP_ID} apache || true && \
         usermod -o -u ${USER_ID} -g ${GROUP_ID} apache || true && \

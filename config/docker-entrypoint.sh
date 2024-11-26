@@ -16,17 +16,12 @@ fi)
 
 echo "Setting up for distribution: $LINUX_DIST"
 
-# Set web user and group based on distribution
-if [ "$LINUX_DIST" = "ubuntu" ]; then
-    WEB_USER="www-data"
-    WEB_GROUP="www-data"
-else
-    WEB_USER="apache"
-    WEB_GROUP="apache"
-fi
+# Set default web user and group
+WEB_USER="${WEB_USER:-www-data}"
+WEB_GROUP="${WEB_GROUP:-www-data}"
 
-echo "Using web user: $WEB_USER"
-echo "Using web group: $WEB_GROUP"
+echo "Starting service with web user: $WEB_USER"
+echo "Starting service with web group: $WEB_GROUP"
 
 # Create required directories
 mkdir -p /var/www/html/image/share
@@ -39,9 +34,11 @@ find /var/www/html -type f -exec chmod 644 {} \;
 chmod -R 775 /var/www/html/image/share
 chmod -R 775 /var/www/html/logs
 
-# Start Apache based on distribution
-if [ "$LINUX_DIST" = "ubuntu" ]; then
-    exec apache2-foreground
-else
+# Configure Apache based on OS/distribution
+if [ "$LINUX_DIST" = "redhat" ]; then
+    # RHEL/CentOS/Rocky specific configuration
     exec httpd-foreground
+else
+    # Default Apache configuration (Ubuntu/Debian based)
+    exec apache2-foreground
 fi
